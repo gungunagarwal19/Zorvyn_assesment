@@ -6,8 +6,10 @@ const { ObjectId } = require('mongodb');
 const authenticate = async (req, res, next) => {
   try {
     
-    const authHeader =req.headers.token;
-    
+    // Accept the standard `Authorization: Bearer <token>` header,
+    // but also support a `token` header as a fallback.
+    const authHeader = req.headers.authorization || req.headers.token;
+
     const token = extractToken(authHeader);
 
     if (!token) {
@@ -32,7 +34,9 @@ const authenticate = async (req, res, next) => {
       return next(new AppError('User account is inactive.', 403));
     }
 
+    // Attach both the DB user object and a convenient string `id` field
     req.user = user;
+    req.user.id = user._id.toString();
     next();
   } catch (error) {
     next(new AppError('Authentication failed.', 401));

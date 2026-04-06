@@ -18,11 +18,15 @@ const verifyToken = (token) => {
 
 const extractToken = (authHeader) => {
   if (!authHeader) return null;
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return null;
+  // Support standard 'Bearer <token>' header, but also accept a raw token
+  // sent in either `Authorization` or custom `token` header.
+  if (typeof authHeader === 'string') {
+    if (authHeader.startsWith('Bearer ')) {
+      return authHeader.split(' ')[1];
+    }
+    return authHeader;
   }
-  return parts[1];
+  return null;
 };
 
 module.exports = {

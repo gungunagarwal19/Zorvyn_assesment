@@ -1,13 +1,13 @@
-const prisma = require('../utils/database');
+const { connectDB, disconnectDB } = require('../utils/database');
 
 async function setupDatabase() {
   try {
     console.log('Setting up database...');
 
-    // Test connection
-    await prisma.$executeRaw`SELECT 1`;
+    await connectDB();
     console.log('✓ Database connection successful');
 
+    await disconnectDB();
     console.log('✓ Database setup complete');
     process.exit(0);
   } catch (error) {

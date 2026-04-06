@@ -1,14 +1,12 @@
-const prisma = require('../utils/database');
+const { getDB } = require('../utils/database');
 const AppError = require('../utils/appError');
+const { ObjectId } = require('mongodb');
 
 class DashboardService {
   async getSummary(userId) {
-    const records = await prisma.financialRecord.findMany({
-      where: {
-        userId,
-        deletedAt: null
-      }
-    });
+    const db = getDB();
+    const recordsCollection = db.collection('FinancialRecord');
+    const records = await recordsCollection.find({ userId: new ObjectId(userId), deletedAt: null }).toArray();
 
     const income = records
       .filter(r => r.type === 'INCOME')
@@ -29,12 +27,9 @@ class DashboardService {
   }
 
   async getCategoryBreakdown(userId) {
-    const records = await prisma.financialRecord.findMany({
-      where: {
-        userId,
-        deletedAt: null
-      }
-    });
+    const db = getDB();
+    const recordsCollection = db.collection('FinancialRecord');
+    const records = await recordsCollection.find({ userId: new ObjectId(userId), deletedAt: null }).toArray();
 
     const breakdown = {};
 
@@ -64,15 +59,9 @@ class DashboardService {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
 
-    const records = await prisma.financialRecord.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-        date: {
-          gte: startDate
-        }
-      }
-    });
+    const db = getDB();
+    const recordsCollection = db.collection('FinancialRecord');
+    const records = await recordsCollection.find({ userId: new ObjectId(userId), deletedAt: null, date: { $gte: startDate } }).toArray();
 
     const trends = {};
 
@@ -100,29 +89,17 @@ class DashboardService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const records = await prisma.financialRecord.findMany({
-      where: {
-        userId,
-        deletedAt: null,
-        createdAt: {
-          gte: startDate
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit
-    });
+    const db = getDB();
+    const recordsCollection = db.collection('FinancialRecord');
+    const records = await recordsCollection.find({ userId: new ObjectId(userId), deletedAt: null, createdAt: { $gte: startDate } }).sort({ createdAt: -1 }).limit(limit).toArray();
 
     return records;
   }
 
   async getExpenseCategories(userId) {
-    const records = await prisma.financialRecord.findMany({
-      where: {
-        userId,
-        type: 'EXPENSE',
-        deletedAt: null
-      }
-    });
+    const db = getDB();
+    const recordsCollection = db.collection('FinancialRecord');
+    const records = await recordsCollection.find({ userId: new ObjectId(userId), type: 'EXPENSE', deletedAt: null }).toArray();
 
     const categories = {};
 
@@ -137,13 +114,9 @@ class DashboardService {
   }
 
   async getIncomeCategories(userId) {
-    const records = await prisma.financialRecord.findMany({
-      where: {
-        userId,
-        type: 'INCOME',
-        deletedAt: null
-      }
-    });
+    const db = getDB();
+    const recordsCollection = db.collection('FinancialRecord');
+    const records = await recordsCollection.find({ userId: new ObjectId(userId), type: 'INCOME', deletedAt: null }).toArray();
 
     const categories = {};
 

@@ -2,6 +2,7 @@ const { getDB } = require('../utils/database');
 const AppError = require('../utils/appError');
 const { generateToken } = require('../utils/jwt');
 const { ObjectId } = require('mongodb');
+const bcrypt = require('bcryptjs');
 
 class UserService {
   async createUser(userData, role = 'VIEWER') {
@@ -16,9 +17,12 @@ class UserService {
         throw new AppError('Email already in use.', 409);
       }
 
+      // Hash password before storing
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const user = await usersCollection.insertOne({
         email,
-        password, // In production, hash this password
+        password: hashedPassword,
         name,
         role: role,
         status: 'ACTIVE',
@@ -122,8 +126,9 @@ class UserService {
       throw new AppError('Invalid email or password.', 401);
     }
 
-    // In production, use bcrypt to compare passwords
-    if (user.password !== password) {
+    // Compare passwords using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       throw new AppError('Invalid email or password.', 401);
     }
 
